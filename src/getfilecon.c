@@ -11,14 +11,14 @@ int getfilecon(const char *path, char ** context)
 {
 	char *buf;
 	ssize_t size;
-	ssize_t ret;
+	ssize_t ret = 0;
 
 	size = INITCONTEXTLEN + 1;
 	buf = malloc(size);
 	if (!buf)
 		return -1;
+#if !defined(__ANDROID__)
 	memset(buf, 0, size);
-
 	ret = getxattr(path, XATTR_NAME_SELINUX, buf, size - 1);
 	if (ret < 0 && errno == ERANGE) {
 		char *newbuf;
@@ -45,6 +45,9 @@ int getfilecon(const char *path, char ** context)
 	if (ret < 0)
 		free(buf);
 	else
-		*context = buf;
+#else
+	memset(buf, 0xff, size);
+#endif
+	*context = buf;
 	return ret;
 }

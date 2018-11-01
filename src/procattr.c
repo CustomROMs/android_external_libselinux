@@ -49,6 +49,7 @@ out:
 static int getprocattrcon(char ** context,
 			  pid_t pid, const char *attr)
 {
+#if !defined(__ANDROID__)
 	char *buf;
 	size_t size;
 	int fd;
@@ -91,11 +92,15 @@ static int getprocattrcon(char ** context,
 	close(fd);
 	errno = errno_hold;
 	return ret;
+#else
+        return 0;
+#endif
 }
 
 static int setprocattrcon(const char * context,
 			  pid_t pid, const char *attr)
 {
+#if !defined(__ANDROID__)
 	int fd;
 	ssize_t ret;
 	int errno_hold;
@@ -117,6 +122,7 @@ static int setprocattrcon(const char * context,
 	if (ret < 0)
 		return -1;
 	else
+#endif
 		return 0;
 }
 

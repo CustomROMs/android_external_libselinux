@@ -9,7 +9,11 @@
 
 int fsetfilecon(int fd, const char *context)
 {
+#if !defined(__ANDROID__)
 	return fsetxattr(fd, XATTR_NAME_SELINUX, context, strlen(context) + 1,
 			 0);
+#else
+	return 0;
+#endif
 }
 

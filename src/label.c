@@ -35,10 +35,11 @@ static selabel_initfunc initfuncs[] = {
 static inline int selabel_is_validate_set(const struct selinux_opt *opts,
 					  unsigned n)
 {
+#if !defined(__ANDROID__)
 	while (n--)
 		if (opts[n].type == SELABEL_OPT_VALIDATE)
 			return !!opts[n].value;
-
+#endif
 	return 0;
 }
 
@@ -46,7 +47,7 @@ int selabel_validate(struct selabel_handle *rec,
 		     struct selabel_lookup_rec *contexts)
 {
 	int rc = 0;
-
+#if !defined(__ANDROID__)
 	if (!rec->validating || contexts->validated)
 		goto out;
 
@@ -56,6 +57,7 @@ int selabel_validate(struct selabel_handle *rec,
 
 	contexts->validated = 1;
 out:
+#endif
 	return rc;
 }
 
@@ -69,6 +71,7 @@ struct selabel_handle *selabel_open(unsigned int backend,
 {
 	struct selabel_handle *rec = NULL;
 
+#if !defined(__ANDROID__)
 	if (backend >= ARRAY_SIZE(initfuncs)) {
 		errno = EINVAL;
 		goto out;
@@ -92,6 +95,7 @@ struct selabel_handle *selabel_open(unsigned int backend,
 	}
 
 out:
+#endif
 	return rec;
 }
 
@@ -110,6 +114,7 @@ selabel_lookup_common(struct selabel_handle *rec,
 int selabel_lookup(struct selabel_handle *rec, char **con,
 		   const char *key, int type)
 {
+#if !defined(__ANDROID__)
 	struct selabel_lookup_rec *lr;
 
 	lr = selabel_lookup_common(rec, key, type);
@@ -118,10 +123,14 @@ int selabel_lookup(struct selabel_handle *rec, char **con,
 
 	*con = strdup(lr->ctx_raw);
 	return *con ? 0 : -1;
+#else
+	return 0;
+#endif
 }
 
 bool selabel_partial_match(struct selabel_handle *rec, const char *key)
 {
+#if !defined(__ANDROID__)
 	if (!rec->func_partial_match) {
 		/*
 		 * If the label backend does not support partial matching,
@@ -130,11 +139,14 @@ bool selabel_partial_match(struct selabel_handle *rec, const char *key)
 		return true;
 	}
 	return rec->func_partial_match(rec, key);
+#endif
+	return false;
 }
 
 int selabel_lookup_best_match(struct selabel_handle *rec, char **con,
 			      const char *key, const char **aliases, int type)
 {
+#if !defined(__ANDROID__)
 	struct selabel_lookup_rec *lr;
 
 	if (!rec->func_lookup_best_match) {
@@ -148,6 +160,9 @@ int selabel_lookup_best_match(struct selabel_handle *rec, char **con,
 
 	*con = strdup(lr->ctx_raw);
 	return *con ? 0 : -1;
+#else
+	return 0;
+#endif
 }
 
 enum selabel_cmp_result selabel_cmp(struct selabel_handle *h1,
@@ -161,12 +176,16 @@ enum selabel_cmp_result selabel_cmp(struct selabel_handle *h1,
 
 void selabel_close(struct selabel_handle *rec)
 {
+#if !defined(__ANDROID__)
 	rec->func_close(rec);
 	free(rec->spec_file);
 	free(rec);
+#endif
 }
 
 void selabel_stats(struct selabel_handle *rec)
 {
+#if !defined(__ANDROID__)
 	rec->func_stats(rec);
+#endif
 }
