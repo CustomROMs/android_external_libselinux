@@ -9,6 +9,11 @@
 
 int fsetfilecon(int fd, const char *context)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return 0;
+#endif
+
 	return fsetxattr(fd, XATTR_NAME_SELINUX, context, strlen(context) + 1,
 			 0);
 }

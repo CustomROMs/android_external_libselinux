@@ -49,6 +49,10 @@ out:
 static int getprocattrcon(char ** context,
 			  pid_t pid, const char *attr)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return 0;
+#endif
 	char *buf;
 	size_t size;
 	int fd;
@@ -99,6 +103,11 @@ static int setprocattrcon(const char * context,
 	int fd;
 	ssize_t ret;
 	int errno_hold;
+
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return 0;
+#endif
 
 	fd = openattr(pid, attr, O_RDWR);
 	if (fd < 0)

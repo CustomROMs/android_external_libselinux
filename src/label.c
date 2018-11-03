@@ -35,10 +35,13 @@ static selabel_initfunc initfuncs[] = {
 static inline int selabel_is_validate_set(const struct selinux_opt *opts,
 					  unsigned n)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return 0;
+#endif
 	while (n--)
 		if (opts[n].type == SELABEL_OPT_VALIDATE)
 			return !!opts[n].value;
-
 	return 0;
 }
 
@@ -46,7 +49,10 @@ int selabel_validate(struct selabel_handle *rec,
 		     struct selabel_lookup_rec *contexts)
 {
 	int rc = 0;
-
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return 0;
+#endif
 	if (!rec->validating || contexts->validated)
 		goto out;
 
@@ -68,6 +74,11 @@ struct selabel_handle *selabel_open(unsigned int backend,
 				    unsigned nopts)
 {
 	struct selabel_handle *rec = NULL;
+
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return rec;
+#endif
 
 	if (backend >= ARRAY_SIZE(initfuncs)) {
 		errno = EINVAL;
@@ -110,6 +121,10 @@ selabel_lookup_common(struct selabel_handle *rec,
 int selabel_lookup(struct selabel_handle *rec, char **con,
 		   const char *key, int type)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return 0;
+#endif
 	struct selabel_lookup_rec *lr;
 
 	lr = selabel_lookup_common(rec, key, type);
@@ -122,6 +137,11 @@ int selabel_lookup(struct selabel_handle *rec, char **con,
 
 bool selabel_partial_match(struct selabel_handle *rec, const char *key)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return false;
+#endif
+
 	if (!rec->func_partial_match) {
 		/*
 		 * If the label backend does not support partial matching,
@@ -135,6 +155,10 @@ bool selabel_partial_match(struct selabel_handle *rec, const char *key)
 int selabel_lookup_best_match(struct selabel_handle *rec, char **con,
 			      const char *key, const char **aliases, int type)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return 0;
+#endif
 	struct selabel_lookup_rec *lr;
 
 	if (!rec->func_lookup_best_match) {
@@ -161,6 +185,10 @@ enum selabel_cmp_result selabel_cmp(struct selabel_handle *h1,
 
 void selabel_close(struct selabel_handle *rec)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return;
+#endif
 	rec->func_close(rec);
 	free(rec->spec_file);
 	free(rec);
@@ -168,5 +196,9 @@ void selabel_close(struct selabel_handle *rec)
 
 void selabel_stats(struct selabel_handle *rec)
 {
+#if defined(__ANDROID__)
+	if (is_selinux_enabled() <= 0)
+		return;
+#endif
 	rec->func_stats(rec);
 }

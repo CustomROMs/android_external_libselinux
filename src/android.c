@@ -1269,7 +1269,12 @@ err:
     selinux_log(SELINUX_ERROR,
                 "SELinux: Could not set context for %s:  %s\n",
                 pathname, strerror(errno));
-    rc = -1;
+
+    if (is_selinux_enabled() <= 0)
+        rc = 0;
+    else
+        rc = -1;
+
     goto out;
 }
 
@@ -1281,6 +1286,9 @@ static int selinux_android_restorecon_common(const char* pathname_orig,
                                              uid_t uid,
                                              unsigned int flags)
 {
+    if (is_selinux_enabled() <= 0)
+        return 0;
+
     bool nochange = (flags & SELINUX_ANDROID_RESTORECON_NOCHANGE) ? true : false;
     bool verbose = (flags & SELINUX_ANDROID_RESTORECON_VERBOSE) ? true : false;
     bool recurse = (flags & SELINUX_ANDROID_RESTORECON_RECURSE) ? true : false;
@@ -1470,6 +1478,9 @@ realpatherr:
 
 int selinux_android_restorecon(const char *file, unsigned int flags)
 {
+    if (is_selinux_enabled() <= 0)
+        return 0;
+
     return selinux_android_restorecon_common(file, NULL, -1, flags);
 }
 
@@ -1478,6 +1489,9 @@ int selinux_android_restorecon_pkgdir(const char *pkgdir,
                                       uid_t uid,
                                       unsigned int flags)
 {
+    if (is_selinux_enabled() <= 0)
+        return 0;
+
     return selinux_android_restorecon_common(pkgdir, seinfo, uid, flags | SELINUX_ANDROID_RESTORECON_DATADATA);
 }
 
